@@ -1,16 +1,49 @@
 import Card from '../../UI/Card/Card';
 import classes from './ProductItem.module.css';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {cartActions} from '../../../store/cart-slice';
 
 const ProductItem = (props) => {
+
+    const cart = useSelector(state => state.cart)
 
     const dispatch = useDispatch()
 
     const { title, price, description, id } = props;
 
     const addToCartHandler = () => {
-        dispatch(cartActions.addItemToCart({id, price, title}))
+
+        const newTotalQuantity = cart.totalQuantity + 1;
+
+        const updatedItems = cart.items.slice()
+        const existingItem = updatedItems.find(item => item.id === id)
+
+        if (existingItem) {
+            const updatedItem = {...existingItem}
+            updatedItem.quantity++
+            updatedItem.totalPrice += price
+            const existingItemIndex = updatedItems.findIndex(item => item.id === id)
+            updatedItems[existingItemIndex] = updatedItem
+        } else {
+            updatedItems.push({
+                id,
+                price,
+                quantity: 1,
+                totalPrice: price,
+                name: title
+            })
+        }
+
+        const newCart = {
+            totalQuantity: newTotalQuantity,
+            items: updatedItems
+        }
+
+        // dispatch(cartActions.addItemToCart({id, price, title}))
+        dispatch(cartActions.replaceCart(newCart))
+
+        // send HTTP Request
+        // fetch('firebase-url', {method: 'POST', body: JSON.stringify(newCart)})
     }
 
     return (
